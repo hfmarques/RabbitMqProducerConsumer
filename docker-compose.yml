@@ -1,0 +1,64 @@
+﻿version: '3.4'
+
+services:
+  producer:
+    image: ${DOCKER_REGISTRY-}producer
+    build:
+      context: .
+      dockerfile: Producer/Dockerfile
+    environment: {
+      "TZ": "America/Sao_Paulo",
+      "ConnectionStrings__rabbitmq": "amqp://user:pass@rabbitmq/rabbitmq"
+    }
+    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rabbitmq-net
+  
+  consumer:
+    image: ${DOCKER_REGISTRY-}consumer
+    build:
+      context: .
+      dockerfile: Consumer/Dockerfile
+    environment: {
+      "TZ": "America/Sao_Paulo",
+      "ConnectionStrings__rabbitmq": "amqp://user:pass@rabbitmq/rabbitmq"
+    }
+    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rabbitmq-net
+  
+  rabbitmq:
+    container_name: RabbitMQ
+    hostname: rabbitmq
+    build:
+      context: ./infra/rabbitmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/mnesia
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -I -s -L http://localhost:15672 || exit 1"
+        ]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+    networks:
+      - rabbitmq-net
+    #    environment:
+    #      RABBITMQ_DEFAULT_USER: user
+    #      RABBITMQ_DEFAULT_PASS: pass
+    #      RABBITMQ_DEFAULT_VHOST: rabbitmq
+
+networks:
+  rabbitmq-net:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
