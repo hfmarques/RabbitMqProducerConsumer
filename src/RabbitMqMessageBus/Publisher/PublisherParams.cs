@@ -11,7 +11,7 @@ public class PublisherParams
         return this;
     }
     
-    public ExchangeTypeEnum Type { get; private set; } = ExchangeTypeEnum.Direct;
+    public ExchangeTypeEnum Type { get; private set; } = ExchangeTypeEnum.Fanout;
     public PublisherParams WithExchangeType(ExchangeTypeEnum type)
     {
         Type = type;

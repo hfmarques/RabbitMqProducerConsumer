@@ -7,7 +7,7 @@ namespace RabbitMqMessageBus.Publisher;
 
 public interface IPublisher
 {
-    void ExecuteAsync<T>(
+    void Execute<T>(
         T message,
         PublisherParams publisherParams,
         CancellationToken cancellationToken = default) where T : class;
@@ -15,7 +15,7 @@ public interface IPublisher
 
 public class Publisher(IConnection connection, ILogger<Publisher> logger) : IPublisher
 {
-     public void ExecuteAsync<T>(
+     public void Execute<T>(
          T message,
          PublisherParams publisherParams,
          CancellationToken cancellationToken = default) where T : class

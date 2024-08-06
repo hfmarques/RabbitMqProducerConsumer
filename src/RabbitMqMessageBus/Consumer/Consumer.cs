@@ -33,7 +33,7 @@ public class Consumer(IConnection connection, ILogger<Consumer> logger, IPublish
             null);
 
         var consumer = new EventingBasicConsumer(channel);
-        consumer.Received += (model, ea) =>
+        consumer.Received += async (model, ea) =>
         {
             logger.LogInformation("Received message from queue {Queue} with id {MessageId}", consumerParams.Queue, ea.BasicProperties.MessageId);
 
@@ -51,13 +51,15 @@ public class Consumer(IConnection connection, ILogger<Consumer> logger, IPublish
 
                 using var _ = LogContext.PushProperty("CorrelationId", correlationId);
 
-                if (obj != null)
-                    onMessage(obj);
+                if (obj == null)
+                    throw new InvalidDataException("Invalid message");
+                    
+                var result = await onMessage(obj);
 
-                // if (!string.IsNullOrEmpty(replyTo))
-//             {
-//                 await Reply(replyTo, correlationId, result, cancellationToken);
-//             }
+                if (!string.IsNullOrEmpty(replyTo) && result is not null)
+                {
+                    await Reply(replyTo, correlationId, result, cancellationToken);
+                }
 
                 channel.BasicAck(ea.DeliveryTag, false);
             }
@@ -96,21 +98,21 @@ public class Consumer(IConnection connection, ILogger<Consumer> logger, IPublish
     }
 
 
-//
-//     private async Task Reply<TResponse>(
-//         string replyTo,
-//         string correlationId,
-//         TResponse? result,
-//         CancellationToken cancellationToken)
-//         where TResponse : class
-//     {
-//         var senderParameters = new PublisherParams()
-//             .WithQueue(replyTo)
-//             .WithCorrelationId(correlationId);
-//
-//         logger.LogInformation("Replying to queue: {QueueName}", replyTo);
-//
-//         if (result is not null)
-//             await publisher.ExecuteAsync(result, senderParameters, cancellationToken);
-//     }
+
+     private async Task Reply<TResponse>(
+         string replyTo,
+         string correlationId,
+         TResponse? result,
+         CancellationToken cancellationToken)
+         where TResponse : class
+     {
+         var senderParameters = new PublisherParams()
+             .WithExchange(replyTo)
+             .WithCorrelationId(correlationId);
+
+         logger.LogInformation("Replying to exchange: {ExchangeName}", replyTo);
+
+         if (result is not null)
+             publisher.Execute(result, senderParameters, cancellationToken);
+     }
 }
