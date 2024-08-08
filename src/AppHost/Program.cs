@@ -1,10 +1,14 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var rabbitmq = builder.AddRabbitMQ("rabbitmq");
+var username = builder.AddParameter("user", secret: true);
+var password = builder.AddParameter("password", secret: true);
 
-// var webapi = builder.AddProject<Projects.WebApi>("webapi")
-//     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-//     .WithReference(messaging)
-//     .WithExternalHttpEndpoints();
+var rabbitmq = builder.AddRabbitMQ("rabbitmq", username, password)
+    .WithManagementPlugin();
+
+var webapi = builder.AddProject<Projects.WebApi>("webapi")
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
+    .WithReference(rabbitmq)
+    .WithExternalHttpEndpoints();
 
 builder.Build().Run();
