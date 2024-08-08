@@ -53,7 +53,7 @@ public class Publisher(IConnection connection, ILogger<Publisher> logger) : IPub
                  false,
                  null);
 
-         if (!string.IsNullOrEmpty(publisherParams.Exchange) && string.IsNullOrEmpty(publisherParams.Queue))
+         if (!string.IsNullOrEmpty(publisherParams.Exchange) && !string.IsNullOrEmpty(publisherParams.Queue))
          {
              channel.QueueBind(publisherParams.Queue,
                  publisherParams.Exchange,
