@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using RabbitMqMessageBus.Publisher;
 using ServiceDefaults;
+using WebApi;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHostedService<ConsumerWorker>();
 
 var app = builder.Build();
 
@@ -23,38 +26,14 @@ app.MapPost("/sendMessage", async (
 ) =>
 {
     var paramsSendInvoiceToCustomer = new PublisherParams()
-        .WithExchange("ExchangeTeste")
-        .WithQueue("QueueTeste")
+        .WithExchange("TestExchange")
+        .WithQueue("TestQueue")
         .WithCorrelationId(Guid.NewGuid().ToString());
     publisher.Execute(
         message,
         paramsSendInvoiceToCustomer,
         cancellationToken: cancellationToken); 
 });
-
-// app.MapGet("/getMessage", async (
-//     [FromServices] IConsumer consumer,
-//     CancellationToken cancellationToken
-// ) =>
-// {
-//     var @params = new ConsumerParams()
-//         .WithMaxNumberOfMessages(1)
-//         .WithWaitTimeSeconds(10)
-//         .WithQueue("http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/test");
-//
-//     var receivedMessage = "";
-//
-//     await consumer.ExecuteAsync(
-//         async (MessageExample message) =>
-//         {
-//             receivedMessage = message.Message;
-//             return Task.CompletedTask;
-//         }, 
-//         @params,
-//         cancellationToken);
-//     
-//     return Results.Ok(receivedMessage);
-// });
 
 app.Run();
 
