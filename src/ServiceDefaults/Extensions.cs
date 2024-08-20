@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using RabbitMqMessageBus;
 
 namespace ServiceDefaults;
 
@@ -33,8 +32,11 @@ public static class Extensions
             http.AddServiceDiscovery();
         });
 
-        builder.AddRabbitMQClient("rabbitmq");
-        builder.Services.AddServicesFromMessageBus();
+        // builder.AddRabbitMQClient("rabbitmq");
+        builder.AddRabbitMQClient("rabbitmq", null, connectionFactory =>
+        {
+            connectionFactory.DispatchConsumersAsync = true;
+        });
 
         return builder;
     }
